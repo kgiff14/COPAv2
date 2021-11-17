@@ -23,8 +23,4 @@
     <Folder Include="Templates\Providers\" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\COPAv2\COPAv2.csproj" />
-  </ItemGroup>
-
 </Project>
