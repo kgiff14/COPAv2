@@ -1,8 +1,10 @@
 ﻿using Conservice.Logging;
 using Conservice.Payment.DataAccess.Enums;
 using Conservice.Selenium.WebDriver;
+using Conservice.Selenium.WebFramework;
 using COPA.Models;
 using COPA.Template.Enums;
+using COPA.Template.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -12,17 +14,32 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using static Conservice.Selenium.WebDriver.DriverStore;
 
-namespace COPA.Template.TemplateBase
+namespace COPA.Template
 {
-    public class LiveTemplateBase : TemplateBaseAbstract
+    public class TemplateBase
     {
+        public Driver Driver { get; set; }
+        public Portal Portal { get; set; }
+        internal TemplateBase Template { get; set; }
+        internal Payment Payment { get; set; }
+        internal DriverTimeout WebDriverTimeout { get; set; } = DriverTimeout.T3;
+        internal DriverTimeout CommandTimeout { get; set; } = DriverTimeout.T3;
+        internal DriverType DriverType { get; set; } = DriverType.DefaultChromeDriver;
+        internal PaymentStep? Step { get; set; }
+        internal bool IsCardNumberVisible { get; set; } = false;
+        internal List<Func<PaymentStep>> PortalHooks { get; set; }
+
+        internal ILogger logger;
+        internal ICOPALogger DBLogger;
         internal ImageManager.AutomationCOPAImageManager ImageManager;
-        public LiveTemplateBase(ILogger logger)
+
+        public TemplateBase(ILogger logger, ICOPALogger DBLogger)
         {
             this.logger = logger;
+            this.DBLogger = DBLogger;
         }
 
-        public override PaymentStep StartWork(TransactionProcess transactionProcess)
+        public PaymentStep StartWork(TransactionProcess transactionProcess)
         {
             try
             {
@@ -62,12 +79,12 @@ namespace COPA.Template.TemplateBase
             }
         }
 
-        internal override TemplateBaseAbstract CreateTemplateInstance(TransactionProcess transactionProcess)
+        internal TemplateBase CreateTemplateInstance(TransactionProcess transactionProcess)
         {
             throw new NotImplementedException();
         }
 
-        internal override void DriverCleanup()
+        internal void DriverCleanup()
         {
             var driverNames = new string[] { "chromedriver", "geckodriver" };
             foreach (var name in driverNames)
@@ -83,17 +100,17 @@ namespace COPA.Template.TemplateBase
             }
         }
 
-        internal override void LogException(Exception e)
+        internal void LogException(Exception e)
         {
             throw new NotImplementedException();
         }
 
-        internal override void SetTemplateConditions()
+        internal void SetTemplateConditions()
         {
             //intentionally empty
         }
 
-        internal override List<Func<PaymentStep>> SetPortalHooks()
+        internal List<Func<PaymentStep>> SetPortalHooks()
         {
             PortalHooks = new List<Func<PaymentStep>>()
             {
@@ -133,7 +150,7 @@ namespace COPA.Template.TemplateBase
         }
 
 
-        internal override void StartDriver()
+        internal void StartDriver()
         {
             throw new NotImplementedException();
         }
@@ -161,7 +178,7 @@ namespace COPA.Template.TemplateBase
             new FileInfo(filePath).Delete();
         }
 
-        internal override void RunTemplate()
+        internal void RunTemplate()
         {
             foreach(var hook in PortalHooks)
             {

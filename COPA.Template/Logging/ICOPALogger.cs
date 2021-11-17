@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace COPA.Template.Logging
 {
-    public interface IDBLogger
+    public interface ICOPALogger
     {
     }
 }
