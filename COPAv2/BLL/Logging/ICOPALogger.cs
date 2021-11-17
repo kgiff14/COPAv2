@@ -1,5 +1,6 @@
 ﻿using Conservice.Logging;
 using Conservice.Payment.DataAccess.Enums;
+using Conservice.Payment.DataAccess.PaymentChronicles;
 using Conservice.Payment.DataAccess.PaymentChronicles.PaymentChronicle;
 using COPA.Models;
 using System;
@@ -14,8 +15,8 @@ namespace COPAv2.BLL.Logging
     {
         public PaymentChronicle ConvertToPaymentChronicle(Payment payment, PaymentStep paymentStep, Exception e = null);
 
-        public void RecordSuccessfulTransaction(ILogger logger, Payment payment);
+        public void RecordSuccessfulTransaction(Payment payment);
 
-        public void LogException(Exception exception, PaymentStep actualStep, bool isCardNumberVisible = true);
+        public void LogException(Exception exception, PaymentStep actualStep, Payment payment, IPaymentChronicler paymentChronicler, bool isCardNumberVisible = true);
     }
 }

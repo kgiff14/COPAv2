@@ -19,9 +19,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Extensions\" />
     <Folder Include="Templates\Contractors\" />
     <Folder Include="Templates\Providers\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\COPAv2\COPAv2.csproj" />
   </ItemGroup>
 
 </Project>

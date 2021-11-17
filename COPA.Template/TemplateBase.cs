@@ -4,7 +4,8 @@ using Conservice.Selenium.WebDriver;
 using Conservice.Selenium.WebFramework;
 using COPA.Models;
 using COPA.Template.Enums;
-using COPA.Template.Logging;
+using COPA.Template.Extensions;
+using COPAv2.BLL.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -25,28 +26,29 @@ namespace COPA.Template
         internal DriverTimeout WebDriverTimeout { get; set; } = DriverTimeout.T3;
         internal DriverTimeout CommandTimeout { get; set; } = DriverTimeout.T3;
         internal DriverType DriverType { get; set; } = DriverType.DefaultChromeDriver;
-        internal PaymentStep? Step { get; set; }
+        internal PaymentStep Step { get; set; }
         internal bool IsCardNumberVisible { get; set; } = false;
         internal List<Func<PaymentStep>> PortalHooks { get; set; }
 
-        internal ILogger logger;
-        internal ICOPALogger DBLogger;
-        internal ImageManager.AutomationCOPAImageManager ImageManager;
+        internal readonly ILogger logger;
+        internal readonly ICOPALogger COPALogger;
+        internal readonly ScreenshotHelper screenshotHelper;
 
-        public TemplateBase(ILogger logger, ICOPALogger DBLogger)
+        public TemplateBase(ILogger logger, ICOPALogger COPALogger, ScreenshotHelper screenshotHelper)
         {
             this.logger = logger;
-            this.DBLogger = DBLogger;
+            this.COPALogger = COPALogger;
+            this.screenshotHelper = screenshotHelper;
         }
 
-        public PaymentStep StartWork(TransactionProcess transactionProcess)
+        public PaymentStep StartWork()
         {
             try
             {
                 DriverCleanup();
                 SetPortalHooks();
                 RunTemplate();
-                return Step ?? PaymentStep.AutomationEncounteredError;
+                return Step;
             }
             catch (Exception e)
             {
@@ -61,17 +63,16 @@ namespace COPA.Template
                     {
                         try
                         {
-                            TrySaveScreenshot(Driver.Instance.PageSource, Driver.Instance.GetScreenshot(), false);
+                            screenshotHelper.TrySaveScreenshot(Driver.Instance.PageSource, Driver.Instance.GetScreenshot(), false, Payment);
                         }
                         catch (Exception ex)
                         {
                             logger.Log(LogLevel.Trace, null, $"PaymentInvoiceNumber: {Payment.PaymentInvoiceNumber}; Error encountered when attempting to save ScreenShot", null, ex);
                         }
                     }
-                    LogException(e);
                 }
 
-                return Step ?? PaymentStep.AutomationEncounteredError;
+                return Step;
             }
             finally
             {
@@ -98,11 +99,6 @@ namespace COPA.Template
                     driverProcess.Close();
                 }
             }
-        }
-
-        internal void LogException(Exception e)
-        {
-            throw new NotImplementedException();
         }
 
         internal void SetTemplateConditions()
@@ -155,36 +151,13 @@ namespace COPA.Template
             throw new NotImplementedException();
         }
 
-        private void TrySaveScreenshot(string pageSource, OpenQA.Selenium.Screenshot screenshot, bool isSuccessImage)
-        {
-            //Regex comes from: http://www.richardsramblings.com/regex/credit-card-numbers/
-            string creditCardRegex = @"\b(?:3[47]\d{2}([\ \-]?)\d{6}\1\d|(?:(?:4\d|5[1-5]|65)\d{2}|6011)([\ \-]?)\d{4}\2\d{4}\2)\d{4}\b";
-
-            if (!Regex.Match(pageSource, creditCardRegex).Success)
-            {
-                SaveScreenshot(screenshot, isSuccessImage);
-            }
-        }
-
-        private void SaveScreenshot(OpenQA.Selenium.Screenshot screenshot, bool isSuccessImage)
-        {
-            var controlNumber = ImageManager.GetControlNumber(isSuccessImage);
-            Payment.AssociatedTransaction.Confirmation.ControlNumber = controlNumber;
-            string filePath = Path.GetTempPath() + $"{controlNumber}.png";
-
-            screenshot.SaveAsFile(filePath, OpenQA.Selenium.ScreenshotImageFormat.Png);
-
-            ImageManager.Save(filePath, Payment.Website.ProviderName);
-            new FileInfo(filePath).Delete();
-        }
-
         internal void RunTemplate()
         {
             foreach(var hook in PortalHooks)
             {
                 Step = hook.Invoke();
 
-                if (IsSuccessStep())
+                if (true)
                 {
                     break;
                 }

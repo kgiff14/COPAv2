@@ -1,5 +1,6 @@
 ﻿using Conservice.Logging;
 using Conservice.Payment.DataAccess.Enums;
+using Conservice.Payment.DataAccess.PaymentChronicles;
 using Conservice.Payment.DataAccess.PaymentChronicles.PaymentChronicle;
 using COPA.Models;
 using System;
@@ -57,7 +58,7 @@ namespace COPAv2.BLL.Logging
             return chronicle;
         }
 
-        public void LogException(Exception exception, PaymentStep actualStep, Payment payment, bool isCardNumberVisible = true)
+        public void LogException(Exception exception, PaymentStep actualStep, Payment payment, IPaymentChronicler paymentChronicler, bool isCardNumberVisible = true)
         {
             logger.Log(LogLevel.Trace, $"PaymentInvoiceNumber: {payment.PaymentInvoiceNumber}\n\tLogging Payment Exception: PaymentID:{payment.PaymentID} Step:{actualStep} Exception:{exception}");
 
@@ -75,14 +76,14 @@ namespace COPAv2.BLL.Logging
                     }
                     catch (Exception e)
                     {
-                        logger.Log(LogLevel.Trace, null, $"PaymentInvoiceNumber: {Payment.PaymentInvoiceNumber}; Error encountered when attempting to save ScreenShot", null, e);
+                        logger.Log(LogLevel.Trace, null, $"PaymentInvoiceNumber: {payment.PaymentInvoiceNumber}; Error encountered when attempting to save ScreenShot", null, e);
                     }
                 }
-                PaymentChronicler.LogPaymentException(ConvertToPaymentChronicle(Payment, actualStep, exception));
+                PaymentChronicler.LogPaymentException(ConvertToPaymentChronicle(payment, actualStep, exception));
             }
             else
             {
-                Payment.PaymentStatus = PaymentStatus.CannotPayTransactionError;
+                payment.PaymentStatus = PaymentStatus.CannotPayTransactionError;
                 if (!IsCardNumberVisible)
                 {
                     try
@@ -91,14 +92,14 @@ namespace COPAv2.BLL.Logging
                     }
                     catch (Exception e)
                     {
-                        logger.Log(LogLevel.Trace, null, $"PaymentInvoiceNumber: {Payment.PaymentInvoiceNumber}; Error encountered when attempting to save ScreenShot", null, e);
+                        logger.Log(LogLevel.Trace, null, $"PaymentInvoiceNumber: {payment.PaymentInvoiceNumber}; Error encountered when attempting to save ScreenShot", null, e);
                     }
                 }
-                PaymentChronicler.LogPaymentException(ConvertToPaymentChronicle(Payment, actualStep, exception));
+                paymentChronicler.LogPaymentException(ConvertToPaymentChronicle(payment, actualStep, exception));
             }
         }
 
-        public void RecordSuccessfulTransaction(ILogger logger, Payment payment)
+        public void RecordSuccessfulTransaction(Payment payment)
         {
             throw new NotImplementedException();
         }
