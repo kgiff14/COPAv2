@@ -27,7 +27,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\COPA.Logging\COPA.Logging.csproj" />
     <ProjectReference Include="..\COPA.Template\COPA.Template.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="BOL\" />
   </ItemGroup>
 
   <Target Name="DebugEnsureNodeEnv" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' And !Exists('$(SpaRoot)node_modules') ">

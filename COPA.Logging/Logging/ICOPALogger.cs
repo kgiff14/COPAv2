@@ -9,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace COPAv2.BLL.Logging
+namespace COPA.Logging.Logging
 {
     public interface ICOPALogger
     {
@@ -17,6 +17,6 @@ namespace COPAv2.BLL.Logging
 
         public void RecordSuccessfulTransaction(Payment payment);
 
-        public void LogException(Exception exception, PaymentStep actualStep, Payment payment, IPaymentChronicler paymentChronicler, bool isCardNumberVisible = true);
+        public void LogException(Exception exception, PaymentStep actualStep, Payment payment, bool isCardNumberVisible = true);
     }
 }

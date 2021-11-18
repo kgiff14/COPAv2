@@ -8,7 +8,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace COPA.Logging.Extensions
+namespace COPA.Template.Extensions
 {
     public class ScreenshotHelper
     {

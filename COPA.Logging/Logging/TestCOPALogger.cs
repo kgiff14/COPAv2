@@ -9,7 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace COPAv2.BLL.Logging
+namespace COPA.Logging.Logging
 {
     public class TestCOPALogger : ICOPALogger
     {
@@ -23,7 +23,7 @@ namespace COPAv2.BLL.Logging
         public PaymentChronicle ConvertToPaymentChronicle(Payment payment, PaymentStep paymentStep, Exception e = null) =>
             Mock.Of<PaymentChronicle>();
 
-        public void LogException(Exception exception, PaymentStep actualStep, Payment payment, IPaymentChronicler paymentChronicler, bool isCardNumberVisible = true)
+        public void LogException(Exception exception, PaymentStep actualStep, Payment payment, bool isCardNumberVisible = true)
         {
             logger.Log(LogLevel.Trace, $"\n\tLastStep: {actualStep}" +
                                         $"\n\tException: {exception.Message}" +

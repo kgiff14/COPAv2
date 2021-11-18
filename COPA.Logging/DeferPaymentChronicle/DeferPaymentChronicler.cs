@@ -15,19 +15,14 @@ namespace COPAv2.BLL.DeferPaymentChronicle
 {
     public class DeferPaymentChronicler : IDeferPaymentChronicler
     {
-        public JsonSerializerSettings JsonSettings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
-        private readonly IPaymentChronicler paymentChronicler;
-
-        private readonly ILogger logger;
+        private JsonSerializerSettings JsonSettings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
         private string recoveryFile;
+        private readonly IPaymentChronicler paymentChronicler;
+        private readonly ILogger logger;
         private readonly string completedChronicles;
-
-        /// <summary>
-        /// Recovery File Directory Location.
-        /// </summary>
-        public readonly string RecoveryFileDir;
-        internal readonly string completedChroniclesLocation;
-        internal readonly string recoveryFileLocation;
+        private readonly string RecoveryFileDir;
+        private readonly string completedChroniclesLocation;
+        private readonly string recoveryFileLocation;
 
         /// <summary>
         /// Constructor to enable Dependency Inversion and Unit Testing.
