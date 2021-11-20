@@ -1,15 +1,19 @@
 ﻿using Conservice.Logging;
 using Conservice.Payment.DataAccess.Enums;
+using Conservice.Payment.DataAccess.PaymentChronicles;
 using Conservice.Selenium.WebDriver;
 using Conservice.Selenium.WebFramework;
+using COPA.Logging.Logging;
 using COPA.Models;
 using COPA.Template;
 using COPA.Template.Enums;
 using COPA.Template.Extensions;
-using COPAv2.BLL.Logging;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using static Conservice.Selenium.WebDriver.DriverStore;
 
@@ -23,21 +27,39 @@ namespace COPAv2.BLL
         internal DriverTimeout WebDriverTimeout { get; set; } = DriverTimeout.T3;
         internal DriverTimeout CommandTimeout { get; set; } = DriverTimeout.T3;
         internal DriverType DriverType { get; set; } = DriverType.DefaultChromeDriver;
-        internal PaymentStep Step { get; set; }
         internal bool IsCardNumberVisible { get; set; } = false;
-        internal List<Func<PaymentStep>> PortalHooks { get; set; }
         internal TemplateBase TemplateBase { get; set; }
         internal TransactionProcess TransactionProcess { get; set; }
+        public PaymentStepEvent PaymentStepEvent = new PaymentStepEvent();
 
         internal readonly ILogger logger;
         internal readonly ICOPALogger COPALogger;
         internal readonly ScreenshotHelper screenshotHelper;
+        internal readonly IPaymentChronicler paymentChronicler;
 
-        public DebugRunLogic(ILogger logger, ICOPALogger COPALogger, ScreenshotHelper screenshotHelper)
+        public DebugRunLogic(ILogger logger, ICOPALogger COPALogger, ScreenshotHelper screenshotHelper, PaymentStepEvent PaymentStepEvent, IPaymentChronicler paymentChronicler)
         {
             this.logger = logger;
             this.COPALogger = COPALogger;
             this.screenshotHelper = screenshotHelper;
+            this.PaymentStepEvent = PaymentStepEvent;
+            this.paymentChronicler = paymentChronicler;
+            this.PaymentStepEvent.PortalHookPerformed += PaymentStepEvent_OnHookPerformed;
+            this.PaymentStepEvent.StepUpdated += PaymentStepEvent_StepUpdated;
+            TemplateBase = new TemplateBase(GetDriver(DriverType.DefaultChromeDriver, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1)), Payment, PaymentStepEvent);
+        }
+
+        private void PaymentStepEvent_StepUpdated(object sender, PaymentStepEventArgs e)
+        {
+            if (PaymentStepEvent.RecoveryStep != PaymentStepEvent.Step)
+            {
+                paymentChronicler.LogPaymentStep(COPALogger.ConvertToPaymentChronicle(Payment, PaymentStepEvent.Step));
+            }
+
+            if (!PaymentStepEvent.IsSuccessStep)
+            {
+                //kill template process instance
+            }
         }
 
         public PaymentStep StartWork()
@@ -49,7 +71,7 @@ namespace COPAv2.BLL
                 TemplateBase.SetPortalHooks();
                 RunTemplate();
 
-                return Step;
+                return PaymentStepEvent.Step;
             }
             catch (Exception e)
             {
@@ -73,7 +95,7 @@ namespace COPAv2.BLL
                     }
                 }
 
-                return Step;
+                return PaymentStepEvent.Step;
             }
             finally
             {
@@ -134,15 +156,32 @@ namespace COPAv2.BLL
 
         private void RunTemplate()
         {
-            foreach (var hook in PortalHooks)
+            using var process = new Process();
+            process.StartInfo.FileName = "C:\\Users\\kordellgifford\\source\\repos\\COPAv2\\COPA.Template\\bin\\Debug\\net5.0\\COPA.Template.exe";
+            process.StartInfo.CreateNoWindow = true;
+            process.StartInfo.Arguments = "WEEnergies_CC";
+            var test = JsonSerializer.Serialize(Payment);
+            var test2 = new List<string>
             {
-                Step = hook.Invoke();
+                test,
+                "WEEnergies"
+            };
+            process.Start("C:\\Users\\kordellgifford\\source\\repos\\COPAv2\\COPA.Template\\bin\\Debug\\net5.0\\COPA.Template.exe", );
+            foreach (var hook in TemplateBase.PortalHooks)
+            {
+                PaymentStepEvent.RunHook(hook);
 
                 if (true)
                 {
                     break;
                 }
             }
+        }
+
+        private void PaymentStepEvent_OnHookPerformed(object sender, PaymentStepEventArgs e)
+        {
+            PaymentStepEvent.Step = e.Step;
+            PaymentStepEvent.IsSuccessStep = Enum.GetName(typeof(SuccessStep), PaymentStepEvent.Step) == string.Empty ? false : true;
         }
     }
 }

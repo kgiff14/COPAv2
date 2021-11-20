@@ -13,6 +13,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using static Conservice.Selenium.WebDriver.DriverStore;
+using static COPA.Template.Extensions.PaymentStepEvent;
 
 namespace COPA.Template
 {
@@ -21,29 +22,31 @@ namespace COPA.Template
         public Driver Driver { get; set; }
         public Portal Portal { get; set; }
         public Payment Payment { get; set; }
-        internal PaymentStep Step { get; set; }
         internal bool IsCardNumberVisible { get; set; } = false;
-        internal List<Func<PaymentStep>> PortalHooks { get; set; }
+        public List<PaymentStepDelegate> PortalHooks { get; set; }
+        private readonly PaymentStepEvent paymentStepEvent;
 
-        public TemplateBase(Driver Driver)
+        public TemplateBase(Driver Driver, Payment Payment, PaymentStepEvent paymentStepEvent)
         {
             this.Driver = Driver;
+            this.Payment = Payment;
+            this.paymentStepEvent = paymentStepEvent;
         }
 
-        public void SetTemplateConditions()
+        public virtual void SetTemplateConditions()
         {
             //intentionally empty
         }
 
-        public List<Func<PaymentStep>> SetPortalHooks()
+        public List<PaymentStepDelegate> SetPortalHooks()
         {
-            PortalHooks = new List<Func<PaymentStep>>()
+            PortalHooks = new List<PaymentStepDelegate>()
             {
                 NavigateLogin,
                 NavigateToBillPay,
                 PayBill,
                 SubmitTransaction,
-                VerifyTransaction,
+                VerifyTransaction
             };
 
             return PortalHooks;
