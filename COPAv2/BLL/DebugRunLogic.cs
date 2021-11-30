@@ -158,15 +158,14 @@ namespace COPAv2.BLL
         {
             using var process = new Process();
             process.StartInfo.FileName = "C:\\Users\\kordellgifford\\source\\repos\\COPAv2\\COPA.Template\\bin\\Debug\\net5.0\\COPA.Template.exe";
-            process.StartInfo.CreateNoWindow = true;
-            process.StartInfo.Arguments = "WEEnergies_CC";
+            process.StartInfo.CreateNoWindow = false;
             var test = JsonSerializer.Serialize(Payment);
             var test2 = new List<string>
             {
                 test,
                 "WEEnergies"
             };
-            process.Start("C:\\Users\\kordellgifford\\source\\repos\\COPAv2\\COPA.Template\\bin\\Debug\\net5.0\\COPA.Template.exe", );
+            process.Start();
             foreach (var hook in TemplateBase.PortalHooks)
             {
                 PaymentStepEvent.RunHook(hook);

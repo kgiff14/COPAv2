@@ -9,9 +9,9 @@ namespace COPA.Template
 {
     class Program
     {
-        public static void Main(string[] args, Payment payment)
+        public static void Main(string[] args)
         {
-
+            Console.WriteLine("hi buddy");
         }
     }
 }
